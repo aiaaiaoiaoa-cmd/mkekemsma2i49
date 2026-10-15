@@ -1,537 +1,885 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#101114">
-  <title>Nursultan Forum — Community</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #101114;
-      --panel: rgba(24, 25, 30, .77);
-      --panel-strong: rgba(29, 30, 36, .92);
-      --line: rgba(255,255,255,.075);
-      --muted: #8b8d98;
-      --text: #e9e9ee;
-      --accent: #df344b;
-      --accent-soft: rgba(223,52,75,.12);
-      --green: #65c99a;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      min-height: 100vh;
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 14px;
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-    button, input, textarea { font: inherit; }
-    button { color: inherit; }
-    a { color: inherit; }
-    .ambient {
-      position: fixed; inset: 0; z-index: -2; pointer-events: none;
-      background:
-        radial-gradient(ellipse at 12% 15%, rgba(223,52,75,.105), transparent 36%),
-        radial-gradient(ellipse at 83% 46%, rgba(95,100,125,.09), transparent 40%),
-        linear-gradient(155deg, #111216, #0e0f12 62%, #131116);
-    }
-    .grain {
-      position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .13;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.14'/%3E%3C/svg%3E");
-    }
-    .wrap { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
-    .topbar {
-      position: sticky; top: 0; z-index: 20;
-      background: rgba(15,16,19,.76);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-    }
-    .topbar-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; min-width: 210px; }
-    .brand-mark {
-      display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px;
-      background: linear-gradient(140deg, #ed435a, #9e1f35); color: white; font-weight: 800; font-size: 20px;
-      box-shadow: 0 5px 24px rgba(223,52,75,.2); border: 1px solid rgba(255,255,255,.12);
-    }
-    .brand-name { font-size: 13px; line-height: 1.25; font-weight: 800; letter-spacing: .15em; }
-    .brand-sub { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; font-weight: 600; letter-spacing: .19em; }
-    .nav { display: flex; align-items: center; gap: 25px; }
-    .nav a { color: #a9aab3; text-decoration: none; font-size: 12px; font-weight: 600; transition: color .2s; }
-    .nav a:hover, .nav a.active { color: #fff; }
-    .nav a.active::after { content: ""; display: block; width: 15px; height: 2px; background: var(--accent); margin-top: 5px; }
-    .auth { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 245px; }
-    .google-btn, .logout-btn, .primary-btn, .secondary-btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 9px; cursor: pointer;
-      border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-weight: 700; font-size: 11px;
-      transition: transform .2s, border-color .2s, background .2s; text-decoration: none;
-    }
-    .google-btn, .secondary-btn { background: rgba(255,255,255,.035); }
-    .google-btn:hover, .secondary-btn:hover, .logout-btn:hover { background: rgba(255,255,255,.075); border-color: rgba(255,255,255,.16); }
-    .google-logo { display: block; width: 16px; height: 16px; }
-    .primary-btn { border-color: rgba(223,52,75,.4); background: linear-gradient(135deg, #d9344b, #a51e35); color: white; box-shadow: 0 6px 22px rgba(223,52,75,.12); }
-    .primary-btn:hover { transform: translateY(-1px); background: linear-gradient(135deg, #ec4057, #b4243b); }
-    .logout-btn { padding: 7px 10px; background: transparent; color: #b9bac3; }
-    .profile { display: none; align-items: center; gap: 10px; }
-    .profile.show { display: flex; }
-    .avatar, .avatar-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-    .avatar { display: grid; place-items: center; background: #33343c; border: 1px solid rgba(255,255,255,.13); font-weight: 800; }
-    .profile-copy { max-width: 130px; line-height: 1.3; }
-    .profile-name { display: block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; }
-    .profile-role { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
-    .main { padding: 42px 0 76px; }
-    .eyebrow { display: flex; align-items: center; gap: 9px; color: #c2c3cb; text-transform: uppercase; letter-spacing: .17em; font-size: 10px; font-weight: 800; }
-    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px rgba(101,201,154,.6); }
-    .hero { display: grid; grid-template-columns: 1fr minmax(215px, 290px); align-items: end; gap: 35px; margin-bottom: 27px; animation: slideIn .55s ease both; }
-    .hero h1 { margin: 14px 0 10px; font-size: clamp(30px, 4vw, 47px); line-height: 1.12; letter-spacing: -.055em; font-weight: 800; }
-    .hero h1 span { color: var(--accent); }
-    .hero p { max-width: 630px; margin: 0; color: #9b9da7; font-size: 13px; line-height: 1.8; }
-    .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat { border: 1px solid var(--line); border-radius: 10px; padding: 15px 16px; background: rgba(255,255,255,.025); backdrop-filter: blur(14px); }
-    .stat-label { color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-size: 9px; font-weight: 700; }
-    .stat-value { display: block; margin-top: 5px; font-size: 19px; font-weight: 800; letter-spacing: -.04em; }
-    .layout { display: grid; grid-template-columns: 245px minmax(0,1fr); gap: 22px; align-items: start; }
-    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 55px rgba(0,0,0,.14); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-    .side-panel { overflow: hidden; }
-    .side-head { padding: 17px 18px 13px; border-bottom: 1px solid var(--line); color: #7f818b; font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-    .side-nav { padding: 9px; }
-    .side-link { display: flex; align-items: center; gap: 11px; padding: 11px 12px; margin: 2px 0; border-radius: 7px; color: #aaaab4; text-decoration: none; font-size: 11px; font-weight: 600; transition: background .2s,color .2s; }
-    .side-link:hover { background: rgba(255,255,255,.04); color: #fff; }
-    .side-link.active { color: #fff; background: var(--accent-soft); box-shadow: inset 2px 0 var(--accent); }
-    .side-icon { width: 18px; text-align: center; color: #a3a5af; font-size: 14px; }
-    .side-link.active .side-icon { color: #ff6477; }
-    .side-count { margin-left: auto; color: #777983; font-size: 10px; }
-    .side-note { padding: 17px 18px 19px; border-top: 1px solid var(--line); color: #777983; font-size: 10px; line-height: 1.7; }
-    .side-note strong { display: block; margin-bottom: 4px; color: #c8c9d0; font-size: 10px; }
-    .content { min-width: 0; }
-    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 14px; padding: 20px 21px 17px; border-bottom: 1px solid var(--line); }
-    .section-title { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; font-weight: 800; }
-    .section-subtitle { margin-top: 4px; color: var(--muted); font-size: 10px; }
-    .section-tag { color: #e85b6e; background: var(--accent-soft); border: 1px solid rgba(223,52,75,.18); padding: 4px 8px; border-radius: 5px; font-size: 9px; letter-spacing: .12em; font-weight: 800; white-space: nowrap; }
-    .updates-list { padding: 0 20px; }
-    .update-card { display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 16px; padding: 21px 0; border-bottom: 1px solid rgba(255,255,255,.055); animation: slideIn .35s ease both; }
-    .update-card:last-child { border-bottom: 0; }
-    .update-mark { width: 54px; min-height: 58px; border: 1px solid rgba(223,52,75,.22); border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, rgba(223,52,75,.11), rgba(255,255,255,.015)); color: #f26a7a; }
-    .update-mark span:first-child { font-size: 18px; font-weight: 800; line-height: 1; }
-    .update-mark span:last-child { margin-top: 5px; font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
-    .update-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 5px; color: #82848e; font-size: 9px; font-weight: 600; }
-    .version-tag { border: 1px solid rgba(255,255,255,.09); border-radius: 4px; padding: 2px 6px; color: #c4c5cd; background: rgba(255,255,255,.035); }
-    .update-title { margin: 0 0 7px; font-size: 15px; line-height: 1.45; letter-spacing: -.02em; font-weight: 800; }
-    .update-body { color: #a7a8b1; font-size: 12px; line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .update-author { margin-top: 11px; color: #777983; font-size: 9px; }
-    .empty-state { padding: 38px 24px; text-align: center; color: var(--muted); }
-    .empty-icon { display: grid; place-items: center; width: 42px; height: 42px; margin: 0 auto 12px; border: 1px solid var(--line); border-radius: 12px; color: #e15a6d; background: var(--accent-soft); font-size: 18px; }
-    .empty-state strong { display: block; margin-bottom: 5px; color: #d6d7dd; font-size: 12px; }
-    .empty-state p { margin: 0 auto; max-width: 370px; font-size: 11px; line-height: 1.7; }
-    .status { padding: 10px 13px; margin-bottom: 17px; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; background: rgba(255,255,255,.035); color: #aeb0b9; font-size: 11px; line-height: 1.7; }
-    .status:empty { display: none; }
-    .status.error { border-color: rgba(223,52,75,.25); color: #f39ba7; background: rgba(223,52,75,.07); }
-    .status.success { border-color: rgba(101,201,154,.22); color: #8ddbb4; background: rgba(101,201,154,.06); }
-    .admin-panel { display: none; margin-top: 22px; overflow: hidden; }
-    .admin-panel.show { display: block; }
-    .admin-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(250px,.9fr); gap: 0; }
-    .admin-column { padding: 20px; min-width: 0; }
-    .admin-column + .admin-column { border-left: 1px solid var(--line); }
-    .admin-column h3 { margin: 0 0 15px; font-size: 11px; text-transform: uppercase; letter-spacing: .11em; }
-    .field { margin-bottom: 12px; }
-    .field label { display: block; margin-bottom: 6px; color: #999ba5; font-size: 10px; font-weight: 700; }
-    .field input, .field textarea { width: 100%; padding: 11px 12px; border: 1px solid rgba(255,255,255,.09); border-radius: 7px; outline: none; color: var(--text); background: rgba(8,9,12,.55); font-size: 11px; transition: border-color .2s; }
-    .field input:focus, .field textarea:focus { border-color: rgba(223,52,75,.55); }
-    .field textarea { min-height: 145px; resize: vertical; line-height: 1.7; }
-    .small-help { margin: 9px 0 0; color: #777983; font-size: 9px; line-height: 1.7; }
-    .members-list { display: grid; gap: 8px; max-height: 390px; overflow: auto; }
-    .member { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid rgba(255,255,255,.06); border-radius: 8px; background: rgba(255,255,255,.02); min-width: 0; }
-    .member-avatar { flex: 0 0 29px; width: 29px; height: 29px; border-radius: 50%; display: grid; place-items: center; background: #33343c; color: #e7e7ec; font-size: 10px; font-weight: 800; overflow: hidden; }
-    .member-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .member-info { min-width: 0; flex: 1; }
-    .member-name { color: #dbdce2; font-size: 10px; font-weight: 700; overflow-wrap: anywhere; }
-    .member-date { color: #777983; font-size: 9px; margin-top: 3px; }
-    .loading-line { color: #797b85; font-size: 10px; padding: 9px 0; }
-    .footer { display: flex; justify-content: space-between; gap: 18px; border-top: 1px solid var(--line); padding: 20px 0 30px; color: #666873; font-size: 9px; }
-    .footer strong { color: #999ba5; font-weight: 700; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
-    @media (max-width: 920px) {
-      .nav { gap: 15px; }
-      .layout { grid-template-columns: 205px minmax(0,1fr); gap: 14px; }
-      .auth { min-width: auto; }
-      .admin-grid { grid-template-columns: 1fr; }
-      .admin-column + .admin-column { border-left: 0; border-top: 1px solid var(--line); }
-    }
-    @media (max-width: 700px) {
-      .wrap { width: min(100% - 26px, 560px); }
-      .topbar-inner { min-height: 68px; flex-wrap: wrap; gap: 12px; padding: 12px 0; }
-      .brand { min-width: auto; }
-      .nav { order: 3; width: 100%; justify-content: flex-start; gap: 22px; padding-top: 5px; }
-      .auth { margin-left: auto; }
-      .profile-copy { display: none; }
-      .google-btn { padding: 9px 10px; font-size: 10px; }
-      .logout-btn { padding: 6px 8px; }
-      .main { padding-top: 30px; }
-      .hero { grid-template-columns: 1fr; gap: 19px; }
-      .hero-stats { max-width: 360px; }
-      .layout { grid-template-columns: 1fr; }
-      .side-panel { display: none; }
-      .section-head { padding: 17px 15px 14px; }
-      .updates-list { padding: 0 15px; }
-      .update-card { grid-template-columns: 45px minmax(0,1fr); gap: 11px; }
-      .update-mark { width: 43px; min-height: 49px; }
-      .update-mark span:first-child { font-size: 16px; }
-      .update-title { font-size: 13px; }
-      .update-body { font-size: 11px; }
-      .footer { flex-direction: column; gap: 5px; }
-    }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nursultan — Форум</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            color: #e8e8f0;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           АКРИЛОВЫЙ ФОН
+           ============================================================ */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(138, 86, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(86, 50, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255, 50, 50, 0.02) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(138, 86, 255, 0.15);
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+            min-height: 100vh;
+        }
+
+        /* ============================================================
+           ШАПКА
+           ============================================================ */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 40px;
+            animation: slideDown 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes slideDown {
+            0% { opacity: 0; transform: translateY(-30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #5632FF, #8A56FF);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 0 30px rgba(86, 50, 255, 0.2);
+        }
+
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff, #8A56FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 8px 18px;
+            border-radius: 60px;
+            color: #8888aa;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            color: #e8e8f0;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .nav-link.active {
+            color: #e8e8f0;
+            background: rgba(138, 86, 255, 0.1);
+            border: 1px solid rgba(138, 86, 255, 0.15);
+        }
+
+        /* ============================================================
+           GOOGLE AUTH
+           ============================================================ */
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-google {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 60px;
+            color: #e8e8f0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-google:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(138, 86, 255, 0.3);
+            box-shadow: 0 0 30px rgba(138, 86, 255, 0.05);
+        }
+
+        .btn-google svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .user-info {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px 8px 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 60px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .user-info.active {
+            display: flex;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5632FF, #8A56FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .user-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #e8e8f0;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(-8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
+           HERO
+           ============================================================ */
+        .hero {
+            text-align: center;
+            padding: 20px 0 50px;
+            animation: fadeUp 0.9s ease 0.2s both;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #8A56FF 50%, #ffffff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: #8888aa;
+            font-weight: 300;
+            max-width: 560px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* ============================================================
+           СЕКЦИЯ ОБНОВЛЕНИЙ
+           ============================================================ */
+        .updates {
+            margin-top: 20px;
+            animation: fadeUp 0.9s ease 0.4s both;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #e8ddd0;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title span {
+            font-size: 0.8rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            color: #666688;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px 14px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .update-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .update-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 20px;
+            padding: 24px 28px;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .update-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #5632FF, #8A56FF);
+            border-radius: 4px 0 0 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .update-card:hover::before {
+            opacity: 1;
+        }
+
+        .update-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(138, 86, 255, 0.12);
+            transform: translateX(4px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .update-version {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8f0;
+        }
+
+        .update-date {
+            font-size: 0.75rem;
+            color: #666688;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px 14px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .update-changes {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .update-changes li {
+            font-size: 0.88rem;
+            color: #aaaacc;
+            padding: 4px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
+        }
+
+        .update-changes li::before {
+            content: '▸';
+            color: #8A56FF;
+            font-weight: 700;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ============================================================
+           СЕКЦИЯ СКАЧИВАНИЯ
+           ============================================================ */
+        .download-section {
+            margin-top: 50px;
+            padding: 40px 36px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 28px;
+            text-align: center;
+            animation: fadeUp 0.9s ease 0.6s both;
+        }
+
+        .download-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #e8ddd0;
+            margin-bottom: 12px;
+        }
+
+        .download-section p {
+            font-size: 0.95rem;
+            color: #666688;
+            margin-bottom: 28px;
+        }
+
+        .btn-download-main {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #5632FF, #8A56FF);
+            border: none;
+            border-radius: 60px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 40px rgba(86, 50, 255, 0.2);
+            text-decoration: none;
+        }
+
+        .btn-download-main:hover {
+            transform: scale(1.03);
+            box-shadow: 0 12px 60px rgba(86, 50, 255, 0.3);
+        }
+
+        .btn-download-main:active {
+            transform: scale(0.97);
+        }
+
+        .btn-download-main svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ============================================================
+           ПОДДЕРЖКА
+           ============================================================ */
+        .support {
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            text-align: center;
+            animation: fadeUp 0.9s ease 0.7s both;
+        }
+
+        .support-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e8ddd0;
+            margin-bottom: 12px;
+        }
+
+        .support-desc {
+            font-size: 0.9rem;
+            color: #666688;
+            margin-bottom: 24px;
+        }
+
+        .btn-telegram {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #0088cc, #00aaff);
+            border-radius: 60px;
+            color: white;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 30px rgba(0, 136, 204, 0.15);
+        }
+
+        .btn-telegram:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 50px rgba(0, 136, 204, 0.25);
+        }
+
+        .btn-telegram svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* ============================================================
+           ФУТЕР
+           ============================================================ */
+        .footer {
+            margin-top: 50px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #444466;
+            animation: fadeIn 2s ease;
+        }
+
+        .footer span {
+            transition: color 0.3s;
+        }
+
+        .footer span:hover {
+            color: #8A56FF;
+        }
+
+        /* ============================================================
+           АДАПТИВ
+           ============================================================ */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+            .header-right {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .nav-links {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+            .update-card {
+                padding: 18px 20px;
+            }
+            .download-section {
+                padding: 28px 20px;
+            }
+            .footer {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app {
+                padding: 12px 16px 40px;
+            }
+            .hero-title {
+                font-size: 1.7rem;
+            }
+            .hero-subtitle {
+                font-size: 0.88rem;
+            }
+            .section-title {
+                font-size: 1.3rem;
+            }
+            .btn-google {
+                font-size: 0.78rem;
+                padding: 8px 14px;
+            }
+            .update-version {
+                font-size: 0.95rem;
+            }
+            .update-changes li {
+                font-size: 0.8rem;
+            }
+            .btn-download-main {
+                padding: 14px 28px;
+                font-size: 0.92rem;
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="ambient"></div><div class="grain"></div>
-  <header class="topbar">
-    <div class="wrap topbar-inner">
-      <a class="brand" href="index.html" aria-label="Nursultan main site">
-        <span class="brand-mark">N</span>
-        <span class="brand-name">NURSULTAN<span class="brand-sub">COMMUNITY FORUM</span></span>
-      </a>
-      <nav class="nav" aria-label="Main navigation">
-        <a class="active" href="#home">Overview</a>
-        <a href="#updates">Latest Updates</a>
-        <a href="#members">Members</a>
-      </nav>
-      <div class="auth">
-        <button class="google-btn" id="googleLoginBtn" type="button">
-          <svg class="google-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.73 7.18l7.64 5.93c4.46-4.12 7.13-10.2 7.13-17.58z"/><path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.53 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.87l-7.64-5.93c-2.12 1.42-4.83 2.27-8.26 2.27-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-          Войти через Google
-        </button>
-        <div class="profile" id="profileBox">
-          <span class="avatar" id="profileAvatar">U</span>
-          <span class="profile-copy"><span class="profile-name" id="profileName">User</span><span class="profile-role" id="profileRole">Member</span></span>
-          <button class="logout-btn" id="logoutBtn" type="button">Выйти</button>
-        </div>
-      </div>
-    </div>
-  </header>
 
-  <main class="wrap main" id="home">
-    <div id="statusMessage" class="status" role="status" aria-live="polite"></div>
-    <section class="hero">
-      <div>
-        <div class="eyebrow"><span class="live-dot"></span> Community hub <span style="color:#555762">/</span> NURSULTAN</div>
-        <h1>THE COMMUNITY.<br><span>IN ONE PLACE.</span></h1>
-        <p>Новости проекта, журнал изменений и обновления Nursultan — в одном месте. Войди через Google, чтобы сохранить профиль между посещениями сайта.</p>
-      </div>
-      <div class="hero-stats" aria-label="Community statistics">
-        <div class="stat"><span class="stat-label">Board</span><span class="stat-value">01 <span style="color:var(--accent);font-size:11px">/ UPDATES</span></span></div>
-        <div class="stat"><span class="stat-label">Access</span><span class="stat-value" style="font-size:16px">Google Auth</span></div>
-      </div>
-    </section>
+    <div class="background"></div>
+    <div class="particles" id="particles"></div>
 
-    <div class="layout">
-      <aside class="panel side-panel">
-        <div class="side-head">Community</div>
-        <div class="side-nav">
-          <a class="side-link active" href="#updates"><span class="side-icon">▤</span> Latest Updates <span class="side-count">01</span></a>
-          <a class="side-link" href="#about"><span class="side-icon">◈</span> About Nursultan</a>
-          <a class="side-link" href="#members"><span class="side-icon">◎</span> Member directory</a>
-        </div>
-        <div class="side-note"><strong>COMMUNITY NOTICE</strong>Официальные обновления проекта публикуются в Latest Updates. Следи за версией и списком изменений.</div>
-      </aside>
+    <div class="app">
 
-      <div class="content">
-        <section class="panel" id="updates">
-          <div class="section-head">
-            <div><h2 class="section-title">Latest Updates</h2><div class="section-subtitle">Official changelog &amp; project announcements</div></div>
-            <span class="section-tag">CHANGELOG</span>
-          </div>
-          <div class="updates-list" id="updatesList">
-            <div class="empty-state"><div class="empty-icon">↻</div><strong>Подключение ленты</strong><p>Загрузка последних обновлений…</p></div>
-          </div>
-        </section>
+        <!-- ============================================================
+             ШАПКА
+             ============================================================ -->
+        <header class="header">
+            <a href="https://keshanikak-creator.github.io/invinciblewin/" class="logo">
+                <div class="logo-icon">N</div>
+                <div class="logo-text">Nursultan</div>
+            </a>
 
-        <section class="panel admin-panel" id="adminPanel">
-          <div class="section-head">
-            <div><h2 class="section-title">Admin Control</h2><div class="section-subtitle">Доступно только аккаунту администратора</div></div>
-            <span class="section-tag">ADMIN</span>
-          </div>
-          <div class="admin-grid">
-            <div class="admin-column">
-              <h3>Publish an update</h3>
-              <form id="updateForm">
-                <div class="field"><label for="updateTitle">Заголовок</label><input id="updateTitle" name="title" maxlength="100" required placeholder="Например: Nursultan 1.4 released"></div>
-                <div class="field"><label for="updateVersion">Версия / тег</label><input id="updateVersion" name="version" maxlength="40" required placeholder="v1.4.0"></div>
-                <div class="field"><label for="updateBody">ChangeLog</label><textarea id="updateBody" name="body" maxlength="8000" required placeholder="• Новые функции&#10;• Исправления&#10;• Известные проблемы"></textarea></div>
-                <button class="primary-btn" id="publishBtn" type="submit">＋ Опубликовать обновление</button>
-                <p class="small-help">Запись будет сохранена в Cloud Firestore и появится у всех посетителей. Максимум 8 000 символов.</p>
-              </form>
+            <div class="header-right">
+                <nav class="nav-links">
+                    <a href="https://keshanikak-creator.github.io/invinciblewin/" class="nav-link">Главная</a>
+                    <a href="https://aiaaiaoiaoa-cmd.github.io/mkekemsma2i49/" class="nav-link active">Форум</a>
+                </nav>
+
+                <div class="auth-section">
+                    <button class="btn-google" id="googleLoginBtn">
+                        <svg viewBox="0 0 24 24">
+                            <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                            <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Войти через Google
+                    </button>
+
+                    <div class="user-info" id="userInfo">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-name" id="userName">User</div>
+                    </div>
+                </div>
             </div>
-            <div class="admin-column" id="members">
-              <h3>Registered members <span style="color:var(--muted);font-weight:500">/ последние 50</span></h3>
-              <div class="members-list" id="membersList"><div class="loading-line">Список появится после настройки базы данных.</div></div>
-              <p class="small-help">Дата регистрации фиксируется при первом входе пользователя. Firebase Authentication также хранит учётные записи отдельно.</p>
+        </header>
+
+        <!-- ============================================================
+             HERO
+             ============================================================ -->
+        <section class="hero">
+            <h1 class="hero-title">Форум Nursultan</h1>
+            <p class="hero-subtitle">
+                Обновления, новости и поддержка. Всё в одном месте.
+            </p>
+        </section>
+
+        <!-- ============================================================
+             ОБНОВЛЕНИЯ
+             ============================================================ -->
+        <section class="updates">
+            <div class="section-title">
+                Последние обновления
+                <span>3 записи</span>
             </div>
-          </div>
+
+            <div class="update-list">
+
+                <!-- ОБНОВЛЕНИЕ 1 -->
+                <div class="update-card">
+                    <div class="update-header">
+                        <div class="update-version">Minecraft Nursultan v1.21.11</div>
+                        <div class="update-date">15 октября 2026</div>
+                    </div>
+                    <ul class="update-changes">
+                        <li>Полностью переработан установщик — теперь работает в 2 раза быстрее</li>
+                        <li>Добавлена поддержка Forge 1.21.11</li>
+                        <li>Исправлен краш при запуске на Windows 10 (сборка 19045)</li>
+                        <li>Оптимизирована загрузка модов — время старта сокращено на 40%</li>
+                        <li>Обновлена база античит-детекта для мультиплеера</li>
+                    </ul>
+                </div>
+
+                <!-- ОБНОВЛЕНИЕ 2 -->
+                <div class="update-card">
+                    <div class="update-header">
+                        <div class="update-version">Nursultan Loader v2.4</div>
+                        <div class="update-date">8 октября 2026</div>
+                    </div>
+                    <ul class="update-changes">
+                        <li>Добавлена поддержка новых версий Minecraft (1.21.9–1.21.11)</li>
+                        <li>Улучшена стабильность инжекта — исправлены краши на слабых ПК</li>
+                        <li>Обновлён интерфейс: более плавные анимации и тёмная тема</li>
+                        <li>Исправлена ошибка «Failed to fetch» при скачивании обновлений</li>
+                    </ul>
+                </div>
+
+                <!-- ОБНОВЛЕНИЕ 3 -->
+                <div class="update-card">
+                    <div class="update-header">
+                        <div class="update-version">Nursultan Loader v2.3</div>
+                        <div class="update-date">28 сентября 2026</div>
+                    </div>
+                    <ul class="update-changes">
+                        <li>Первый публичный релиз лоадера для Minecraft Nursultan</li>
+                        <li>Встроенный установщик модов и оптимизация FPS</li>
+                        <li>Поддержка Forge и Fabric из коробки</li>
+                        <li>Автоматическое обновление при запуске</li>
+                    </ul>
+                </div>
+
+            </div>
         </section>
 
-        <section class="panel" id="about" style="margin-top:22px; padding:20px 21px;">
-          <div class="eyebrow" style="font-size:9px;color:#e15a6d">ABOUT THE PROJECT</div>
-          <h2 style="margin:8px 0 6px;font-size:14px;letter-spacing:.02em">Nursultan Community</h2>
-          <p style="margin:0;color:#9698a2;font-size:11px;line-height:1.85">Здесь публикуются официальные обновления, версии и ChangeLog проекта. Авторизация работает через Firebase Authentication, а записи сохраняются в Cloud Firestore — поэтому обновление страницы не сбрасывает сеанс входа.</p>
+        <!-- ============================================================
+             СЕКЦИЯ СКАЧИВАНИЯ
+             ============================================================ -->
+        <section class="download-section">
+            <h2>Скачать лоадер</h2>
+            <p>Последняя версия · Windows 10/11 · x64</p>
+            <button class="btn-download-main" id="downloadBtn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+                    <polyline points="8 12 12 16 16 12"/>
+                    <line x1="12" y1="2" x2="12" y2="16"/>
+                </svg>
+                Download Loader
+            </button>
         </section>
-      </div>
+
+        <!-- ============================================================
+             ПОДДЕРЖКА
+             ============================================================ -->
+        <section class="support">
+            <div class="support-title">Нужна помощь?</div>
+            <div class="support-desc">Напиши нам в Telegram — ответим в течение 5 минут</div>
+            <a href="https://t.me/thxinc" target="_blank" class="btn-telegram">
+                <svg viewBox="0 0 24 24">
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                </svg>
+                Поддержка в Telegram
+            </a>
+        </section>
+
+        <!-- ============================================================
+             ФУТЕР
+             ============================================================ -->
+        <footer class="footer">
+            <span>© 2026 Nursultan. Все права защищены.</span>
+            <span>Сделано с ❤️ для коммьюнити</span>
+        </footer>
+
     </div>
-  </main>
 
-  <footer class="wrap footer"><span>© 2026 <strong>NURSULTAN</strong> Community</span><span>Community hub <strong>·</strong> Official updates</span></footer>
+    <script>
+        // ============================================================
+        // 1. ГЕНЕРАЦИЯ ПЛАВАЮЩИХ ЧАСТИЦ
+        // ============================================================
+        (function generateParticles() {
+            const container = document.getElementById('particles');
+            const count = 25;
+            
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 6 + 2;
+                const left = Math.random() * 100;
+                const duration = Math.random() * 20 + 15;
+                const delay = Math.random() * 20;
+                
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = left + '%';
+                particle.style.animationDuration = duration + 's';
+                particle.style.animationDelay = delay + 's';
+                particle.style.opacity = Math.random() * 0.3 + 0.1;
+                
+                container.appendChild(particle);
+            }
+        })();
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-    import { getFirestore, collection, doc, getDoc, setDoc, addDoc, query, orderBy, limit, onSnapshot, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        // ============================================================
+        // 2. GOOGLE AUTH
+        // ============================================================
+        (function googleAuth() {
+            const CLIENT_ID = '849190665927-1ch46i0nv2ri7hj37qncp1fjd13vdeld.apps.googleusercontent.com';
+            const REDIRECT_URI = "https://aiaaiaoiaoa-cmd.github.io/mkekemsma2i49/"
 
-    // 1) Replace these values with the Web app config from Firebase Console.
-    const firebaseConfig = {
-      apiKey: "AIzaSyDEQTZ-OR2m-EXFeoFYL3496wDJpIhuH2I",
-      authDomain: "nurulsan.firebaseapp.com",
-      projectId: "nurulsan",
-      storageBucket: "nurulsan.firebasestorage.app",
-      messagingSenderId: "740859868755",
-      appId: "1:740859868755:web:90e6c07423d0426ec3f8a6"
-    };
-    // 2) Use the same admin email in firestore.rules. This UI check is not security by itself;
-    //    Firestore Security Rules must enforce the same check on the database side.
-    const ADMIN_EMAIL = "keshanikak@gmail.com";
+            const googleBtn = document.getElementById('googleLoginBtn');
+            const userInfo = document.getElementById('userInfo');
+            const userName = document.getElementById('userName');
+            const userAvatar = document.getElementById('userAvatar');
 
-    const $ = (id) => document.getElementById(id);
-    const statusBox = $("statusMessage");
-    const loginBtn = $("googleLoginBtn");
-    const profileBox = $("profileBox");
-    const adminPanel = $("adminPanel");
-    const updatesList = $("updatesList");
-    const membersList = $("membersList");
-    let auth = null;
-    let db = null;
-    let currentUser = null;
-    let unsubscribeUpdates = null;
+            function signInWithGoogle() {
+                const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
+                    'client_id=' + CLIENT_ID +
+                    '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+                    '&response_type=token' +
+                    '&scope=email profile';
+                window.location.href = authUrl;
+            }
 
-    function showStatus(message, type = "") {
-      statusBox.textContent = message || "";
-      statusBox.className = "status" + (type ? " " + type : "");
-    }
+            function handleCallback() {
+                const hash = window.location.hash;
+                if (hash) {
+                    const params = new URLSearchParams(hash.substring(1));
+                    const accessToken = params.get('access_token');
+                    
+                    if (accessToken) {
+                        fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                            headers: { 'Authorization': 'Bearer ' + accessToken }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            googleBtn.style.display = 'none';
+                            userInfo.classList.add('active');
+                            
+                            const name = data.name || 'User';
+                            userName.textContent = name;
+                            userAvatar.textContent = name.charAt(0).toUpperCase();
+                            
+                            history.replaceState(null, null, ' ');
+                        })
+                        .catch(err => {
+                            console.error('Google auth error:', err);
+                        });
+                    }
+                }
+            }
 
-    function isConfigured() {
-      return Object.values(firebaseConfig).every((value) => typeof value === "string" && value.length > 0 && !value.startsWith("YOUR_"));
-    }
+            googleBtn.addEventListener('click', signInWithGoogle);
+            handleCallback();
+        })();
 
-    function isAdmin(user) {
-      return Boolean(user && ADMIN_EMAIL && !ADMIN_EMAIL.startsWith("YOUR_") && user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
-    }
+        // ============================================================
+        // 3. КНОПКА DOWNLOAD LOADER
+        // ============================================================
+        (function downloadLoader() {
+            const btn = document.getElementById('downloadBtn');
+            const LOADER_URL = 'https://github.com/keshanikak-creator/drochaliti/releases/download/mai1/nursultan_launcher.exe';
 
-    function safeDate(value) {
-      if (value && typeof value.toDate === "function") return value.toDate();
-      if (value instanceof Date) return value;
-      return null;
-    }
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    btn.style.transform = '';
+                }, 150);
+                
+                try {
+                    const a = document.createElement('a');
+                    a.href = LOADER_URL;
+                    a.download = 'Nursultan_Loader.exe';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } catch (err) {
+                    alert('⚠️ Ссылка на лоадер временно недоступна');
+                    console.error('Download error:', err);
+                }
+            });
+        })();
 
-    function dateLabel(value) {
-      const date = safeDate(value);
-      if (!date) return "Дата не указана";
-      return new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(date);
-    }
+        // ============================================================
+        // 4. ПЛАВНОЕ ПОЯВЛЕНИЕ ЭЛЕМЕНТОВ
+        // ============================================================
+        (function smoothReveal() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
 
-    function appendText(parent, tag, className, text) {
-      const node = document.createElement(tag);
-      if (className) node.className = className;
-      node.textContent = text ?? "";
-      parent.appendChild(node);
-      return node;
-    }
+            document.querySelectorAll('.update-card').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+                observer.observe(el);
+            });
+        })();
 
-    function renderEmpty(title, text) {
-      updatesList.replaceChildren();
-      const box = document.createElement("div"); box.className = "empty-state";
-      appendText(box, "div", "empty-icon", "↻");
-      appendText(box, "strong", "", title);
-      appendText(box, "p", "", text);
-      updatesList.appendChild(box);
-    }
+        console.log('🚀 Nursultan Forum loaded!');
+        console.log('🔗 Support: https://t.me/thxinc');
+    </script>
 
-    function renderUpdates(snapshot) {
-      updatesList.replaceChildren();
-      if (snapshot.empty) {
-        renderEmpty("Пока нет обновлений", "Когда администратор опубликует первый ChangeLog, он появится здесь.");
-        return;
-      }
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const card = document.createElement("article"); card.className = "update-card";
-        const mark = document.createElement("div"); mark.className = "update-mark";
-        appendText(mark, "span", "", "N"); appendText(mark, "span", "", "NEWS");
-        card.appendChild(mark);
-        const body = document.createElement("div");
-        const meta = document.createElement("div"); meta.className = "update-meta";
-        appendText(meta, "span", "", dateLabel(data.createdAt));
-        if (data.version) appendText(meta, "span", "version-tag", data.version);
-        body.appendChild(meta);
-        appendText(body, "h3", "update-title", data.title || "Untitled update");
-        appendText(body, "div", "update-body", data.body || "");
-        if (data.authorName || data.authorEmail) appendText(body, "div", "update-author", "Published by " + (data.authorName || data.authorEmail));
-        card.appendChild(body); updatesList.appendChild(card);
-      });
-    }
-
-    async function saveUserProfile(user) {
-      const userRef = doc(db, "users", user.uid);
-      const existing = await getDoc(userRef);
-      const profile = {
-        uid: user.uid,
-        email: user.email || "",
-        displayName: user.displayName || "Nursultan member",
-        photoURL: user.photoURL || "",
-        lastSeenAt: serverTimestamp()
-      };
-      if (!existing.exists()) {
-        profile.createdAt = serverTimestamp();
-        await setDoc(userRef, profile);
-      } else {
-        await setDoc(userRef, profile, { merge: true });
-      }
-    }
-
-    function renderProfile(user) {
-      loginBtn.style.display = user ? "none" : "inline-flex";
-      profileBox.classList.toggle("show", Boolean(user));
-      if (!user) return;
-      const name = user.displayName || user.email || "Nursultan member";
-      $("profileName").textContent = name;
-      $("profileRole").textContent = isAdmin(user) ? "Administrator" : "Member";
-      const avatar = $("profileAvatar");
-      if (user.photoURL) {
-        const img = document.createElement("img"); img.className = "avatar-img"; img.alt = ""; img.referrerPolicy = "no-referrer"; img.src = user.photoURL;
-        avatar.replaceWith(img); img.id = "profileAvatar";
-      } else {
-        const existingImg = document.querySelector("#profileBox .avatar-img");
-        if (existingImg) { const replacement = document.createElement("span"); replacement.className = "avatar"; replacement.id = "profileAvatar"; existingImg.replaceWith(replacement); }
-        const currentAvatar = $("profileAvatar"); currentAvatar.className = "avatar"; currentAvatar.textContent = name.trim().charAt(0).toUpperCase() || "U";
-      }
-      adminPanel.classList.toggle("show", isAdmin(user));
-    }
-
-    async function loadMembers() {
-      if (!currentUser || !isAdmin(currentUser)) return;
-      membersList.replaceChildren();
-      appendText(membersList, "div", "loading-line", "Загрузка участников…");
-      try {
-        const q = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(50));
-        const snap = await getDocs(q);
-        membersList.replaceChildren();
-        if (snap.empty) { appendText(membersList, "div", "loading-line", "Пока никто не вошёл на форум."); return; }
-        snap.forEach((entry) => {
-          const memberData = entry.data();
-          const item = document.createElement("div"); item.className = "member";
-          const avatar = document.createElement("div"); avatar.className = "member-avatar";
-          if (memberData.photoURL) { const img = document.createElement("img"); img.src = memberData.photoURL; img.alt = ""; img.referrerPolicy = "no-referrer"; avatar.appendChild(img); }
-          else avatar.textContent = (memberData.displayName || memberData.email || "U").trim().charAt(0).toUpperCase();
-          const info = document.createElement("div"); info.className = "member-info";
-          appendText(info, "div", "member-name", memberData.displayName || memberData.email || "Member");
-          appendText(info, "div", "member-date", "Регистрация: " + dateLabel(memberData.createdAt));
-          item.append(avatar, info); membersList.appendChild(item);
-        });
-      } catch (error) {
-        membersList.replaceChildren();
-        appendText(membersList, "div", "loading-line", "Не удалось загрузить список. Проверь правила Firestore и почту администратора.");
-        console.error("Members load failed:", error);
-      }
-    }
-
-    loginBtn.addEventListener("click", async () => {
-      if (!isConfigured()) {
-        showStatus("Сначала настрой Firebase: вставь конфигурацию проекта в firebaseConfig внизу forum.html, включи Google Sign-In и создай Firestore. См. README_FORUM.md.", "error");
-        return;
-      }
-      try {
-        showStatus("Открываем вход Google…");
-        await signInWithPopup(auth, new GoogleAuthProvider());
-        showStatus("Вход выполнен.", "success");
-      } catch (error) {
-        console.error("Google sign-in failed:", error);
-        showStatus("Не получилось войти через Google: " + (error.code || error.message) + ". Проверь разрешённый домен в Firebase Authentication.", "error");
-      }
-    });
-
-    $("logoutBtn").addEventListener("click", async () => {
-      try { await signOut(auth); showStatus("Ты вышел из аккаунта.", "success"); }
-      catch (error) { showStatus("Не удалось выйти: " + (error.code || error.message), "error"); }
-    });
-
-    $("updateForm").addEventListener("submit", async (event) => {
-      event.preventDefault();
-      if (!currentUser || !isAdmin(currentUser)) { showStatus("Публиковать обновления может только администратор.", "error"); return; }
-      const title = $("updateTitle").value.trim();
-      const version = $("updateVersion").value.trim();
-      const body = $("updateBody").value.trim();
-      if (!title || !version || !body) { showStatus("Заполни все поля перед публикацией.", "error"); return; }
-      const button = $("publishBtn"); button.disabled = true; button.textContent = "Публикация…";
-      try {
-        await addDoc(collection(db, "updates"), {
-          title, version, body,
-          authorName: currentUser.displayName || "Administrator",
-          authorEmail: currentUser.email,
-          createdAt: serverTimestamp()
-        });
-        $("updateForm").reset();
-        showStatus("Обновление опубликовано — оно появится в Latest Updates у всех посетителей.", "success");
-      } catch (error) {
-        console.error("Publishing update failed:", error);
-        showStatus("Публикация отклонена: " + (error.code || error.message) + ". Проверь ADMIN_EMAIL и firestore.rules.", "error");
-      } finally {
-        button.disabled = false; button.textContent = "＋ Опубликовать обновление";
-      }
-    });
-
-    if (!isConfigured()) {
-      renderEmpty("Firebase ещё не настроен", "Страница уже оформлена, но для входа Google и общей ленты нужно заполнить firebaseConfig и опубликовать правила Firestore. Инструкция — в README_FORUM.md.");
-      membersList.replaceChildren(); appendText(membersList, "div", "loading-line", "Настрой Firebase, чтобы сохранять и просматривать участников.");
-      showStatus("Настройка не завершена: замени значения YOUR_… в firebaseConfig и ADMIN_EMAIL внизу этого файла. До этого вход и база данных работать не будут.", "error");
-    } else {
-      try {
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        await setPersistence(auth, browserLocalPersistence);
-        unsubscribeUpdates = onSnapshot(query(collection(db, "updates"), orderBy("createdAt", "desc"), limit(20)), renderUpdates, (error) => {
-          console.error("Updates listener failed:", error);
-          renderEmpty("Не удалось загрузить обновления", "Проверь, что Firestore создан и опубликованы правила из firestore.rules.");
-        });
-        onAuthStateChanged(auth, async (user) => {
-          currentUser = user;
-          renderProfile(user);
-          if (!user) {
-            membersList.replaceChildren(); appendText(membersList, "div", "loading-line", "Войди администратором, чтобы смотреть список участников.");
-            showStatus("");
-            return;
-          }
-          try {
-            await saveUserProfile(user);
-          } catch (error) {
-            console.error("Profile save failed:", error);
-            showStatus("Вход выполнен, но профиль не записался в Firestore. Проверь правила коллекции users.", "error");
-          }
-          if (isAdmin(user)) loadMembers();
-          else { membersList.replaceChildren(); appendText(membersList, "div", "loading-line", "Список участников доступен только администратору."); }
-          if (!statusBox.classList.contains("error")) showStatus("Вход выполнен как " + (user.displayName || user.email) + ". Сеанс сохранится после обновления страницы.", "success");
-        });
-      } catch (error) {
-        console.error("Firebase initialization failed:", error);
-        showStatus("Не удалось подключить Firebase: " + (error.code || error.message) + ". Проверь конфигурацию проекта.", "error");
-      }
-    }
-
-    window.addEventListener("beforeunload", () => { if (unsubscribeUpdates) unsubscribeUpdates(); });
-  </script>
 </body>
 </html>
